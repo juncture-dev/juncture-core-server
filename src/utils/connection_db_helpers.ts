@@ -3,6 +3,7 @@ import { getDb } from "../db";
 import { connection, connectionExternalMap, providerEnumType } from "../db/schema";
 import { PostgresError } from "postgres";
 import redis from "./redis";
+import { isCloudModeEnabled, useCloudContextManager } from "./CloudContextManager";
 
 // Redis key prefixes and expiration time
 const CONNECTION_ID_CACHE_PREFIX = "connection_id:";
@@ -181,7 +182,18 @@ export async function updateConnectionInvalidFlag(connection_id: string, isInval
     }
 }
 
-export async function getConnectionID(external_id: string, provider: providerEnumType): Promise<string | null> {
+export async function getConnectionID(external_id: string, provider: providerEnumType, project_id?: string): Promise<string | null> {
+    // In cloud mode, we need project_id for proper connection lookup
+    if (isCloudModeEnabled()) {
+        if (!project_id) {
+            console.error('Project ID is required for connection lookup in cloud mode');
+            return null;
+        }
+        const cloudContextManager = useCloudContextManager();
+        return await cloudContextManager.getConnectionID(external_id, provider, project_id);
+    }
+
+    // Core mode - use the original logic
     try {
         // Check Redis cache first
         const cacheKey = getConnectionCacheKey(external_id, provider);

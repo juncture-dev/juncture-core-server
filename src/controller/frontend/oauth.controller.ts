@@ -151,26 +151,26 @@ export async function authorizationCallback(req: Request<{ provider: providerEnu
     const { accessToken, refreshToken, expiresIn, connectionExpiryDate } = tokenResult;
     
     // Create connection in database
-    let connection_id = await getConnectionID(external_id, provider);
+    let connection_id: string | null;
     let is_new_connection = false;
+    
+    // In cloud mode, we need project_id for connection lookup
+    if (isCloudModeEnabled()) {
+        if (!credentials.juncture_project_id) {
+            res.status(400).json({ error: 'Project ID is required in cloud mode' });
+            return;
+        }
+        connection_id = await getConnectionID(external_id, provider, credentials.juncture_project_id);
+    } else {
+        // Core mode - no project_id needed
+        connection_id = await getConnectionID(external_id, provider);
+    }
+    
     // new connection, create the UUID
     if (!connection_id) {
         connection_id = crypto.randomUUID();
         is_new_connection = true;
     }
-    // const connectionResult = await createConnection(
-    //     connection_id,
-    //     provider, 
-    //     external_id, 
-    //     refreshToken, 
-    //     connectionExpiryDate, 
-    //     credentials.juncture_project_id
-    // );
-    
-    // if ('error' in connectionResult) {
-    //     res.status(500).json({ error: connectionResult.error });
-    //     return;
-    // }
 
     // Store access token in redis (no need to await)
     storeAccessTokenInRedis(accessToken, expiresIn, connection_id);

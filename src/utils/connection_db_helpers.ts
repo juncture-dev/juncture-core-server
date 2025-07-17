@@ -109,7 +109,7 @@ export async function addConnectionToDB(connection_id: string, external_id: stri
     }
 }
 
-export async function updateConnectionInDB(connection_id: string, refresh_token: string, expires_at: Date, extendTransaction?: ExtendTransaction): Promise<boolean> {
+export async function updateConnectionInDB(connection_id: string, refresh_token: string, expires_at: Date, invalidRefreshToken: boolean, extendTransaction?: ExtendTransaction): Promise<boolean> {
     try {
         const drizzle = getDb();
         
@@ -118,7 +118,8 @@ export async function updateConnectionInDB(connection_id: string, refresh_token:
             const updatedConnection = await tx.update(connection).set({
                 refreshToken: refresh_token,
                 expiresAt: expires_at,
-                lastUpdated: new Date()
+                lastUpdated: new Date(),
+                invalidRefreshToken: invalidRefreshToken
             }).where(eq(connection.connectionId, connection_id)).returning();
 
             if (extendTransaction) {

@@ -70,7 +70,7 @@ export async function createConnection(
 ): Promise<{ connection_id: string } | { error: string }> {    
     if (!isCloudModeEnabled()) {
         if (!is_new_connection) {
-            const success = await updateConnectionInDB(connection_id, refreshToken, connectionExpiryDate, extendTransaction);
+            const success = await updateConnectionInDB(connection_id, refreshToken, connectionExpiryDate, false, extendTransaction);
             if (!success) {
                 return { error: 'Failed to update connection. Please try again later.' };
             }

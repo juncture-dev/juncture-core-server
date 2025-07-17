@@ -39,7 +39,10 @@ export async function checkConnectionValidity(req: Request<{}, {}, {}, CheckConn
     
     const { connectionId, error } = await getConnectionIDFromSecretKey(req, external_id, provider);
     if (!connectionId) {
-        res.status(401).json({ error: error! });
+        res.status(200).json({ 
+            exists: false, 
+            is_invalid: false 
+        });
         return;
     }
 

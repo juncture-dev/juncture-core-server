@@ -123,7 +123,7 @@ export async function createJiraConnection(req: Request<{}, {}, SetJiraSiteBody>
         connectionDetailsResponse.external_id,
         connectionDetailsResponse.refresh_token,
         new Date(connectionDetailsResponse.connection_expiry_date),
-        false,
+        connectionDetailsResponse.is_new_connection,
         connectionDetailsResponse.juncture_project_id,
         jiraTransaction
     );
